@@ -1,65 +1,73 @@
 package com.example.wang.finalattempt;
-
-import androidx.appcompat.app.AppCompatActivity;
-
-
 import android.app.Activity;
-
+import android.content.Context;
+import android.net.wifi.ScanResult;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-
 import android.view.View;
 import android.widget.Button;
-
 import android.widget.TextView;
 import android.widget.Toast;
-
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
-
+import java.util.List;
 import java.net.UnknownHostException;
+import androidx.fragment.app.FragmentActivity;
 
-public class MainActivity extends Activity {
+public  class MainActivity extends FragmentActivity implements OnMapReadyCallback {
+    private GoogleMap mMap;
+
     //buttons
-
     private Button packetAutomaticWifi;
-
     private  Button fileCreation;
 
-    TextView textView;
+    private TextView textView;
     //String path for the creation and creating a file
-    String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Filesz";
-    File file = new File(path);
+    private String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/FilesForData";
+    private File file = new File(path);
 
     //handle packet auto stuff
     private Handler wifiHandler;
 
     //handles automatic wifi stuff
-    int changer = 0;
-
+      String stringBuilderGps = "";
+    static int changer = 0;
+    int dataCounter = 0;
+    static int total = 0;
+    
+    private ProgressBar  simpleProgressBar;
+    private Handler mHandler = new Handler();
+    private int intie = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+
         //assigning buttons
         packetAutomaticWifi = findViewById(R.id.packetAutomaticWifi);
         fileCreation = findViewById(R.id.fileCreate);
-        textView = findViewById(R.id.textView);
+        textView = findViewById(R.id.FileProgressTextView);
+        simpleProgressBar = findViewById(R.id.simpleProgressBar);
+
+        simpleProgressBar.setMax(100); // 100 maximum value for the progress value
+
         // file directory make up
         file.mkdirs();
-
-
+    
         fileCreation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -68,7 +76,6 @@ public class MainActivity extends Activity {
 
             }
         });
-
         //(handles wifi auto loop)
         packetAutomaticWifi.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -79,8 +86,19 @@ public class MainActivity extends Activity {
         });
 
     }// end of oncreate
+     @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
 
+        //rowan
+        LatLng rowan = new LatLng(39.7107068, -75.1203863);
+        mMap.addMarker(new MarkerOptions().position(rowan).title("Marker at Rowan University"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(rowan));
+    }
 
+/*
+TODO need to make into loop statement, loop makes app crash. Fast fix to get data
+*/
     private final Runnable wifi_Runnable;//runnable
     {
         wifi_Runnable = new Runnable() {
@@ -91,30 +109,37 @@ public class MainActivity extends Activity {
                     if(changer == 0) {
                         sendDataTest1k();
                         changer++;
+                           Toast.makeText(getApplicationContext(), "1k", Toast.LENGTH_LONG).show()
                         break;
                     }else if(changer==1){
                        sendDataTest2k();
                         changer++;
+                           Toast.makeText(getApplicationContext(), "2k", Toast.LENGTH_LONG).show()
                         break;
                     }else if(changer==2 ){
                         sendDataTest3k();
                         changer++;
+                           Toast.makeText(getApplicationContext(), "3k", Toast.LENGTH_LONG).show()
                         break;
                     }else if(changer==3){
                         sendDataTest5k();
                         changer++;
+                           Toast.makeText(getApplicationContext(), "5k", Toast.LENGTH_LONG).show()
                         break;
                     }else if(changer==4){
                         sendDataTest10k();
                         changer++;
+                           Toast.makeText(getApplicationContext(), "10k", Toast.LENGTH_LONG).show()
                         break;
                     }else if(changer==5 ){
                         sendDataTest100k();
                         changer++;
+                           Toast.makeText(getApplicationContext(), "100k", Toast.LENGTH_LONG).show()
                         break;
                     }else if(changer==6 ){
-                        sendDataTest1mb();
+                        sendDataTest500k();
                         changer++;
+                           Toast.makeText(getApplicationContext(), "1mb", Toast.LENGTH_LONG).show()
                         break;
                     }
                     else{
@@ -125,28 +150,20 @@ public class MainActivity extends Activity {
             }
         };
     }
-
-
-
-
+/*
+create a file with random data inside to be sent out
+*/
     public void fileCreation(){
         try {
             // catches IOException below
             File file = new File(path + "/1mb.txt");
             String build = "";
-            for(int i =0;i<=100000;i++){
-                build += "g";
+            for(int i =0;i<=500000;i++){
+                build += "a";
             }
             String mes = build;
-
             String dataPacket = new String(mes);
-            /* We have to use the openFileOutput()-method
-             * the ActivityContext provides, to
-             * protect your file from others and
-             * This is done for security-reasons.
-             * We chose MODE_WORLD_READABLE, because
-             *  we have nothing to hide in our file */
-            FileOutputStream fOut = openFileOutput("1mb.txt",
+            FileOutputStream fOut = openFileOutput("500k.txt",
                     MODE_PRIVATE);
             OutputStreamWriter osw = new OutputStreamWriter(fOut);
             // Write the string to the file
@@ -155,12 +172,8 @@ public class MainActivity extends Activity {
              * really written out and close */
             osw.flush();
             osw.close();
-            //Reading the file back...
-            /* We have to use the openFileInput()-method
-             * the ActivityContext provides.
-             * Again for security reasons with
-             * openFileInput(...) */
-            FileInputStream fIn = openFileInput("1mb.txt");
+            //Reading the file back.
+            FileInputStream fIn = openFileInput("500k.txt");
             InputStreamReader isr = new InputStreamReader(fIn);
             /* Prepare a char-Array that will
              * hold the chars we read back in. */
@@ -171,8 +184,6 @@ public class MainActivity extends Activity {
             String readString = new String(inputBuffer);
             // Check if we read back the same chars that we had written out
             boolean isTheSame = dataPacket.equals(readString);
-            // Log.i("File Reading stuff", "success = " + isTheSame);
-
             String[] saveText;
             saveText = dataPacket.split(System.getProperty("line.separator"));
             Save2(file, saveText);
@@ -189,7 +200,6 @@ public class MainActivity extends Activity {
         MessageSender  mt = new MessageSender();
         mt.execute("2k.txt");
     }
-
     public void sendDataTest3k(){
         MessageSender  mt = new MessageSender();
         mt.execute("3k.txt");
@@ -198,7 +208,6 @@ public class MainActivity extends Activity {
         MessageSender  mt = new MessageSender();
         mt.execute("5k.txt");
     }
-
     public void sendDataTest10k (){
         MessageSender  mt = new MessageSender();
         mt.execute("10k.txt");
@@ -209,11 +218,10 @@ public class MainActivity extends Activity {
         mt.execute("100k.txt");
     }
 
-    public void sendDataTest1mb(){
+    public void sendDataTest500k(){
         MessageSender  mt = new MessageSender();
-        mt.execute("1mb.txt");
+        mt.execute("500k.txt");
     }
-
     /*
       to save to a textfile with appending feature
    */
@@ -247,11 +255,16 @@ public class MainActivity extends Activity {
     }//end of Save2 method
 
     private class MyTaskResult {
-        String textView1 = "hi";
+        String textView1 = "test";
 
     }
+    /*
+    Sending the data through a socket connection
+    */
     public class MessageSender extends AsyncTask<Object, Void, MyTaskResult> {
-        String dstAddress = "73.150.49.150";
+       //enter ip to server
+        String dstAddress = "73.xxx.xx.xxx";
+        //enter port, might need to port forward
         int dstPort = 6000;
         private String val1;
         @Override
@@ -265,6 +278,7 @@ public class MainActivity extends Activity {
                 OutputStream outputStream;
                 client = new Socket(dstAddress, dstPort);
                 outputStream = client.getOutputStream();
+              //buffer to send everything (Very Important)
                 byte[] buffer = new byte[1024];
                 FileInputStream in = new FileInputStream(location);
                 int rBytes;
@@ -285,12 +299,7 @@ public class MainActivity extends Activity {
         @Override
         protected void onPostExecute(MyTaskResult myLoc) {
            textView.setText(val1);
-
-            //Toast.makeText(getApplicationContext(),myLoc.textView1,Toast.LENGTH_LONG).show();
-
         }
-
-
     }//end of inner class
 }//end of everything
 

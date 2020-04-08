@@ -15,6 +15,7 @@ private static ServerSocket serverSocket;
 public static void main(String[] args) {
 
 try {
+//Change port to the port to apps port
 serverSocket = new ServerSocket(6000);
 
 while(true) {
@@ -23,8 +24,8 @@ new Thread(new ClientWorker(serverSocket.accept())).start();
 } catch (IOException e) {
 // TODO Auto-generated catch block
 e.printStackTrace();
-}
-}
+   }
+ }
 }
 class ClientWorker implements Runnable{
 private static ServerSocket serverSocket;
@@ -42,18 +43,19 @@ try {
 clientSocket = serverSocket;
 }catch(Exception e) {
 e.printStackTrace();
-}
+  }
 }
 
 @Override
 public void run() {
 try {
+//timing function
 long start = System.currentTimeMillis();
 
 byte[] mybytearray = new byte[filesize];   
 
 inputStream = clientSocket.getInputStream();
-
+//Change to own desktop
 fileOutputStream = new FileOutputStream("/home/ning/Desktop/output.txt");
 
 bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
@@ -81,6 +83,7 @@ long totalTime = end-start;
 String num2 = String.valueOf(totalTime);
 FileWriter info = null;
 try {
+//Change to own desktop
 info = new FileWriter("/home/ning/Desktop/data.txt",true);
 } catch (IOException e1) {
 // TODO Auto-generated catch block
@@ -98,7 +101,7 @@ counterA = 0;
 }
 
 info.flush();
-info.close();
+info.close();s
 
 bufferedOutputStream.close();
 inputStream.close();
